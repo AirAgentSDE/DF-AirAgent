@@ -22,7 +22,7 @@ class QAExtractor(OperatorABC):
     def __init__(
             self,
             output_json_file: Optional[str] = None,
-            input_instruction: Optional[str] = "Please answer the following question based on the provided information."
+            input_instruction: Optional[str] = None
     ):
         self.logger = get_logger()
         self.output_json_file = output_json_file
@@ -39,7 +39,7 @@ class QAExtractor(OperatorABC):
                 "输出符合Stanford Alpaca标准的instruction-input-output格式。\n\n"
                 "初始化参数:\n"
                 "• output_json_file: 输出JSON文件路径 (可选，不指定则只更新DataFrame)\n"
-                "• input_instruction: 统一的指令前缀 (默认: 'Please answer the following question...')\n\n"
+                "• input_instruction: 统一的指令前缀，用途为微调时必填 \n\n"
                 "运行参数 (input_key):\n"
                 "• input_qa_key: QA对的字段名 (默认: 'QA_pairs')\n"
                 "• instruction: 本次运行的具体指令内容 (若不填则使用默认指令)\n"
@@ -125,11 +125,18 @@ class QAExtractor(OperatorABC):
             #         parts.append(f"{field}: {qa[field]}")
 
             # --- 2. 组装结果字典 (使用动态 Key) ---
-            item = {
-                key_inst: self.instruction,  # Instruction 列
-                key_q: question,     # Question/Input 列 (内容由 fields 决定)
-                key_a: answer                # Answer/Output 列
-            }
+            # Build item with instruction first if provided (maintains Alpaca format order)
+            if self.instruction is not None:
+                item = {
+                    key_inst: self.instruction,  # Instruction 列
+                    key_q: question,     # Question/Input 列
+                    key_a: answer                # Answer/Output 列
+                }
+            else:
+                item = {
+                    key_q: question,     # Question/Input 列
+                    key_a: answer                # Answer/Output 列
+                }
             results.append(item)
         return results
 

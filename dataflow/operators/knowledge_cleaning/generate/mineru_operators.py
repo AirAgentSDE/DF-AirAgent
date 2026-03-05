@@ -479,10 +479,19 @@ class FileOrURLToMarkdownConverterLocal(MinerUABC):
 
             # Directory for storing raw data, including various MinerU parsing outputs.
             # You can customize which content to extract based on your needs.
-
-            # PerItemDir = os.path.join(intermediate_dir, pdf_name, MinerU_Version[mineru_backend])
-            PerItemDir = os.path.join(intermediate_dir, pdf_name, self.mineru_backend)
-            output_file = os.path.join(PerItemDir, f"{pdf_name}.md")
+            
+            # MinerU backend folder naming convention:
+            # - "vlm-*" backends (vlm-sglang-engine, vlm-auto-engine, etc.) create folder named "vlm"
+            # - "pipeline" backend creates folder named "auto"
+            if self.mineru_backend.startswith("vlm-"):
+                backend_folder = "vlm"
+            elif self.mineru_backend == "pipeline":
+                backend_folder = "auto"
+            else:
+                backend_folder = self.mineru_backend
+            
+            PerItemDir = os.path.join(intermediate_dir, pdf_name, backend_folder)
+            output_file = os.path.abspath(os.path.join(PerItemDir, f"{pdf_name}.md"))
             parsed_results[item["index"]] = output_file
             logger.info(f"Markdown saved to: {output_file}")
 
@@ -616,9 +625,10 @@ class FileOrURLToMarkdownConverterFlash(MinerUABC):
             final_results.extend(res)
         # results = [res[0]  for res_list in results for res in res_list]  # flatten [[res]] -> [res]
         parsed_results = {}
-        print(final_results)
+        logger.info(f"FlashMinerU results: {final_results}")
         for res in final_results:
             md_path = Path(res)
+            # Use absolute path to handle CWD changes during WebUI execution
             md_path = os.path.abspath(os.path.join(self.intermediate_dir, md_path.stem, 'vlm', md_path.name))
             parsed_results[index_name_dict[Path(md_path).stem]] = md_path
             logger.info(f"Markdown saved to: {md_path}")

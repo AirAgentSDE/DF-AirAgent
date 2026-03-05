@@ -360,7 +360,7 @@ def main():
 
     if success:
         print(f"\nOperation completed!")
-        print(f"Model saved to: {cache_path / '.cache' / 'saves' / 'qwen2.5_7b_sft_model'}")
+        print("Model has been saved, check 'output_dir' in train_config.yaml for exact path")
     else:
         sys.exit(1)
 
